@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار API - Test Google Apps Script</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1e3a8a;
+        }
+        .test-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border-right: 3px solid #3b82f6;
+        }
+        .test-section h3 {
+            margin-bottom: 12px;
+            color: #1e3a8a;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .test-button:hover { background: #2563eb; }
+        .test-button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        .result.loading { background: #dbeafe; color: #1e40af; }
+        .result.success { background: #dcfce7; color: #15803d; border-right: 3px solid #22c55e; }
+        .result.error { background: #fee2e2; color: #991b1b; border-right: 3px solid #ef4444; }
+        .result.info { background: #fef3c7; color: #92400e; border-right: 3px solid #f59e0b; }
+        .api-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .api-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .api-item code {
+            display: block;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 11px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 اختبار نقاط النهاية (Test API Endpoints)</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ اختبار AUTH API</h3>
+            <button class="test-button" onclick="testGetUsers()">🔍 Get Users</button>
+            <button class="test-button" onclick="testLogin()">🔑 Test Login</button>
+            <div id="authResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2️⃣ اختبار SURVEY API</h3>
+            <button class="test-button" onclick="testSurveyAll()">📊 Get Survey All</button>
+            <div id="surveyResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3️⃣ اختبار LEVELING API</h3>
+            <button class="test-button" onclick="testLevelingAll()">📈 Get Leveling All</button>
+            <div id="levelingResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4️⃣ اختبار SESSIONS API</h3>
+            <button class="test-button" onclick="testSessions()">👥 Get Sessions</button>
+            <div id="sessionsResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5️⃣ API URLs Configuration</h3>
+            <div class="api-list" id="apiList"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 Proxy Configuration</h3>
+            <button class="test-button" onclick="testProxyDirect()">Test Proxy Direct</button>
+            <button class="test-button" onclick="testProxyGoogle()">Test Direct to Google</button>
+            <div id="proxyResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // APIs from app.js
+        const PROXY_BASE = '/proxy?url=';
+        const AUTH_API = PROXY_BASE + encodeURIComponent('https://script.google.com/macros/s/AKfycbw11d7xiBS_xfu22yVd17DcvqkU4_DmJyXblIPBsolCDMtIR65k6LwwanKo-rCWxAHp/exec');
+        const SURVEY_API = PROXY_BASE + encodeURIComponent('https://script.google.com/macros/s/AKfycbyLqsgqWo95tGOkr4ZlKwVy7a3IbnUPFtUU9zelwZONJZZdhZp52-4aTxIQvVFusIsU/exec');
+        const LEVELING_API = PROXY_BASE + encodeURIComponent('https://script.google.com/macros/s/AKfycbw34uHRQ_fsrh-iJY2DxVLQQhmis072BI0_05GkqSd5exmNGI_eBIfVJnrh5LyTwoGg/exec');
+        const SESSIONS_API = PROXY_BASE + encodeURIComponent('https://script.google.com/macros/s/AKfycbw11d7xiBS_xfu22yVd17DcvqkU4_DmJyXblIPBsolCDMtIR65k6LwwanKo-rCWxAHp/exec');
+
+        // Display API URLs
+        function displayAPIs() {
+            const list = document.getElementById('apiList');
+            const apis = [
+                { name: 'AUTH_API', url: AUTH_API },
+                { name: 'SURVEY_API', url: SURVEY_API },
+                { name: 'LEVELING_API', url: LEVELING_API },
+                { name: 'SESSIONS_API', url: SESSIONS_API }
+            ];
+            list.innerHTML = apis.map(api => `
+                <div class="api-item">
+                    <strong>${api.name}</strong>
+                    <code>${api.url.substring(0, 100)}...</code>
+                </div>
+            `).join('');
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            el.className = `result ${type}`;
+            el.textContent = message;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        async function testGetUsers() {
+            showResult('authResult', 'جاري التحميل...', 'loading');
+            try {
+                const response = await fetch(AUTH_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getUsers' })
+                });
+                
+                showResult('authResult', `Status: ${response.status}\nURL: ${response.url}\nHeaders:\n${JSON.stringify(Object.fromEntries(response.headers), null, 2)}`, 'info');
+                
+                const text = await response.text();
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('authResult', `✅ Success!\n${JSON.stringify(data, null, 2)}`, 'success');
+                    } catch (e) {
+                        showResult('authResult', `❌ Invalid JSON\nResponse: ${text.substring(0, 300)}`, 'error');
+                    }
+                } else {
+                    showResult('authResult', `❌ Error ${response.status}\n${text.substring(0, 300)}`, 'error');
+                }
+            } catch (err) {
+                showResult('authResult', `❌ Network Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            showResult('authResult', 'جاري التحميل...', 'loading');
+            try {
+                const response = await fetch(AUTH_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: 'test',
+                        password: 'test'
+                    })
+                });
+                
+                const text = await response.text();
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('authResult', `Status: ${response.status}\n${JSON.stringify(data, null, 2)}`, 'info');
+                    } catch (e) {
+                        showResult('authResult', `Status: ${response.status}\nResponse: ${text.substring(0, 300)}`, 'error');
+                    }
+                } else {
+                    showResult('authResult', `Status: ${response.status}\n${text.substring(0, 300)}`, 'error');
+                }
+            } catch (err) {
+                showResult('authResult', `Network Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testSurveyAll() {
+            showResult('surveyResult', 'جاري التحميل...', 'loading');
+            try {
+                const response = await fetch(SURVEY_API + '?type=all&t=' + Date.now());
+                const text = await response.text();
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('surveyResult', `✅ Success!\nCount: ${Array.isArray(data) ? data.length : 'N/A'}\n${JSON.stringify(data, null, 2).substring(0, 300)}`, 'success');
+                    } catch (e) {
+                        showResult('surveyResult', `Status: ${response.status}\n${text.substring(0, 300)}`, 'error');
+                    }
+                } else {
+                    showResult('surveyResult', `Status: ${response.status}\n${text.substring(0, 300)}`, 'error');
+                }
+            } catch (err) {
+                showResult('surveyResult', `Network Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testLevelingAll() {
+            showResult('levelingResult', 'جاري التحميل...', 'loading');
+            try {
+                const response = await fetch(LEVELING_API + '?type=all&t=' + Date.now());
+                const text = await response.text();
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('levelingResult', `✅ Success!\nCount: ${Array.isArray(data) ? data.length : 'N/A'}\n${JSON.stringify(data, null, 2).substring(0, 300)}`, 'success');
+                    } catch (e) {
+                        showResult('levelingResult', `Status: ${response.status}\n${text.substring(0, 300)}`, 'error');
+                    }
+                } else {
+                    showResult('levelingResult', `Status: ${response.status}\n${text.substring(0, 300)}`, 'error');
+                }
+            } catch (err) {
+                showResult('levelingResult', `Network Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testSessions() {
+            showResult('sessionsResult', 'جاري التحميل...', 'loading');
+            try {
+                const response = await fetch(SESSIONS_API + '?action=getSessions&t=' + Date.now());
+                const text = await response.text();
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('sessionsResult', `✅ Success!\nCount: ${Array.isArray(data) ? data.length : 'N/A'}\n${JSON.stringify(data, null, 2).substring(0, 300)}`, 'success');
+                    } catch (e) {
+                        showResult('sessionsResult', `Status: ${response.status}\n${text.substring(0, 300)}`, 'error');
+                    }
+                } else {
+                    showResult('sessionsResult', `Status: ${response.status}\n${text.substring(0, 300)}`, 'error');
+                }
+            } catch (err) {
+                showResult('sessionsResult', `Network Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testProxyDirect() {
+            showResult('proxyResult', 'جاري الاختبار...', 'loading');
+            try {
+                const url = 'https://script.google.com/macros/s/AKfycbw11d7xiBS_xfu22yVd17DcvqkU4_DmJyXblIPBsolCDMtIR65k6LwwanKo-rCWxAHp/exec';
+                const response = await fetch('/proxy?url=' + encodeURIComponent(url), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getUsers' })
+                });
+                const text = await response.text();
+                showResult('proxyResult', `Status: ${response.status}\n${text.substring(0, 500)}`, response.ok ? 'success' : 'error');
+            } catch (err) {
+                showResult('proxyResult', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testProxyGoogle() {
+            showResult('proxyResult', 'جاري الاختبار...', 'loading');
+            try {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbw11d7xiBS_xfu22yVd17DcvqkU4_DmJyXblIPBsolCDMtIR65k6LwwanKo-rCWxAHp/exec', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getUsers' })
+                });
+                const text = await response.text();
+                showResult('proxyResult', `Direct Google - Status: ${response.status}\n(This will likely fail due to CORS in browser)\n${text.substring(0, 500)}`, 'info');
+            } catch (err) {
+                showResult('proxyResult', `Expected CORS error: ${err.message}`, 'info');
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', displayAPIs);
+    </script>
+</body>
+</html>

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منظومة مركز شبكات المرافق - المنيا</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="app.js"></script>
+
+</head>
+<body>
+<div id="hLoadingBar" class="inline-125"></div>
+<div id="hBusyOverlay" class="inline-64">
+  <div class="inline-24">
+    <div class="inline-137"></div>
+    <div id="hBusyMsg" class="inline-84">جاري المعالجة...</div>
+    <div id="hBusySub" class="inline-79">برجاء الانتظار</div>
+  </div>
+</div>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🛰️</div>
+    <div class="login-title">مركز شبكات المرافق</div>
+    <div class="login-sub">مجمع الذكاء المكاني المتقدم - محافظة المنيا</div>
+    <div class="login-group"><label>👤 اسم المستخدم</label><input type="text" id="loginUser" placeholder="أدخل اسم المستخدم" onkeypress="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-group"><label>🔒 كلمة المرور</label><input type="password" id="loginPass" placeholder="أدخل كلمة المرور" onkeypress="if(event.key==='Enter')doLogin()"></div>
+    <div class="remember-group"><label><input type="checkbox" id="rememberCheckbox"> تذكرنى</label></div>
+    <button class="login-btn" onclick="doLogin()">🚀 دخول</button>
+    <div class="login-error" id="loginError">❌ اسم المستخدم أو كلمة المرور غير صحيحة</div>
+    <div class="login-footer">منظومة مركز شبكات المرافق والرفع المساحي · تصميم القنصل أحمد ذكى</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+  <div class="top-header">
+    <div class="header-brand">
+      <div class="brand-icon">🛰️</div>
+      <div class="brand-text">
+        <div class="brand-title">مركز شبكات المرافق والرفع المساحي</div>
+        <div class="brand-sub">مجمع الذكاء المكاني المتقدم - محافظة المنيا</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="top-home-btn" onclick="mobGoPage('mobile-home')">🏠 القائمة</button>
+      <div class="active-users-badge" id="activeUsersBadge" onclick="if(currentUser&&currentUser.role==='admin')showPage('sessions')">
+        <span class="active-dot"></span>
+        <span>نشط الآن: <span id="activeUsersCount">0</span></span>
+      </div>
+      <div class="user-badge">👤 <span id="userDisplay"></span></div>
+      <div class="h-notif-bell admin-only inline-60" id="hNotifBell" onclick="hToggleNotifPanel()">
+        🔔 الإشعارات
+        <span class="h-notif-badge" id="hNotifBadge">0</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">🚪 خروج</button>
+    </div>
+  </div>
+
+  <div class="app-layout">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-group">
+        <button type="button" class="group-header" onclick="toggleSidebarGroup(this.closest('.sidebar-group'))">
+          <span>الأقسام</span>
+          <span class="group-toggle">▾</span>
+        </button>
+        <div class="group-items">
+          <div class="nav-item active" onclick="showPage('search')" data-page="search"><span class="nav-icon">🔍</span> البحث عن شهادة</div>
+        </div>
+      </div>
+      <div class="sidebar-group admin-office-only">
+        <button type="button" class="group-header" onclick="toggleSidebarGroup(this.closest('.sidebar-group'))">
+          <span>الإدارة</span>
+          <span class="group-toggle">▾</span>
+        </button>
+        <div class="group-items">
+          <div class="nav-item admin-office-only" onclick="showPage('survey')" data-page="survey"><span class="nav-icon">🗺️</span> تسليم الرفع المساحي</div>
+          <div class="nav-item admin-office-only" onclick="showPage('leveling')" data-page="leveling"><span class="nav-icon">📐</span> تسليم المنسوب</div>
+        </div>
+      </div>
+      <div class="sidebar-group admin-office-only">
+        <button type="button" class="group-header" onclick="toggleSidebarGroup(this.closest('.sidebar-group'))">
+          <span>التقارير</span>
+          <span class="group-toggle">▾</span>
+        </button>
+        <div class="group-items">
+          <div class="nav-item admin-office-only" onclick="showPage('collection')" data-page="collection"><span class="nav-icon">📥</span> جمع التقارير</div>
+          <div class="nav-item admin-office-only" onclick="showPage('upload')" data-page="upload"><span class="nav-icon">📤</span> رفع التقارير</div>
+          <div class="nav-item admin-office-only" onclick="showPage('finish')" data-page="finish"><span class="nav-icon">✅</span> إنهاء الطلبات</div>
+          <div class="nav-item admin-only" onclick="showPage('sessions')" data-page="sessions"><span class="nav-icon">👥</span> تسجيلات الدخول</div>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <button type="button" class="group-header" onclick="toggleSidebarGroup(this.closest('.sidebar-group'))">
+          <span>منظومة الحافز</span>
+          <span class="group-toggle">▾</span>
+        </button>
+        <div class="group-items">
+          <div class="nav-item center-hafez-only" onclick="showPage('hafez-center')" data-page="hafez-center"><span class="nav-icon">💰</span> كشف الحافز</div>
+          <div class="nav-item admin-only" onclick="showPage('hafez-admin')" data-page="hafez-admin"><span class="nav-icon">⚙️</span> إدارة الحافز</div>
+          <div class="nav-item admin-only" onclick="showPage('hafez-history')" data-page="hafez-history"><span class="nav-icon">📅</span> السجل التاريخي</div>
+          <div class="nav-item admin-only" onclick="showPage('hafez-employees')" data-page="hafez-employees"><span class="nav-icon">👥</span> موظفو الحافز</div>
+          <div class="nav-item" onclick="showPage('hafez-search')" data-page="hafez-search"><span class="nav-icon">🔍</span> بحث الحافز</div>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <button type="button" class="group-header" onclick="toggleSidebarGroup(this.closest('.sidebar-group'))">
+          <span>لوحة التحكم</span>
+          <span class="group-toggle">▾</span>
+        </button>
+        <div class="group-items">
+          <div class="nav-item admin-only" onclick="showPage('users')" data-page="users"><span class="nav-icon">👤</span> المستخدمين</div>
+          <div class="nav-item admin-only" onclick="showPage('activity')" data-page="activity"><span class="nav-icon">📝</span> سجل النشاطات</div>
+          <div class="nav-item admin-only" onclick="showPage('sessions')" data-page="sessions"><span class="nav-icon">👥</span> تسجيلات الدخول</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div id="mobileBackBar" class="mobile-back-bar" onclick="showPage('mobile-home')">↩️ العودة للقائمة الرئيسية</div>
+      <div id="topUpdateBar" class="top-update-bar" style="display:none;">
+        <div class="update-icon">🔄</div>
+        <div class="update-text" id="topUpdateText">جاري تحديث البيانات في الخلفية...</div>
+        <div class="update-time" id="topUpdateTime"></div>
+      </div>
+
+      <!-- MOBILE MAIN MENU -->
+      <div class="page" id="page-mobile-home">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">🏠</div><div class="page-header-text"><h2>القائمة الرئيسية</h2><p>اختر القسم الذي تريد التعامل معه</p></div></div>
+        </div>
+        <div class="mobile-home-grid">
+          <div class="home-group">
+            <div class="group-title">مجموعة البحث</div>
+            <div class="group-buttons">
+              <button class="section-btn" onclick="showPage('search')">🔍 بحث عن شهادة</button>
+              <button class="section-btn" onclick="showPage('hafez-search')">🔎 بحث عن حافز</button>
+            </div>
+          </div>
+          <div class="home-group">
+            <div class="group-title">مجموعة تسليم الشهادات</div>
+            <div class="group-buttons">
+              <button class="section-btn admin-office-only" onclick="showPage('survey')">🗺️ تسليم رفع مساحي</button>
+              <button class="section-btn admin-office-only" onclick="showPage('leveling')">📐 تسليم منسوب</button>
+            </div>
+          </div>
+          <div class="home-group">
+            <div class="group-title">مجموعة التقارير</div>
+            <div class="group-buttons">
+              <button class="section-btn admin-office-only" onclick="showPage('collection')">📥 تجميع التقارير</button>
+              <button class="section-btn admin-office-only" onclick="showPage('upload')">📤 رفع التقارير</button>
+              <button class="section-btn admin-office-only" onclick="showPage('finish')">✅ إنهاء تكنولوجي</button>
+            </div>
+          </div>
+          <div class="home-group">
+            <div class="group-title">مجموعة الحافز</div>
+            <div class="group-buttons">
+              <button class="section-btn admin-only" onclick="showPage('hafez-admin')">⚙️ إدارة الحافز</button>
+              <button class="section-btn admin-only" onclick="showPage('hafez-history')">📅 السجل التاريخي</button>
+              <button class="section-btn admin-only" onclick="showPage('hafez-employees')">👥 موظفي الحافز</button>
+            </div>
+          </div>
+          <div class="home-group">
+            <div class="group-title">مجموعة لوحة التحكم</div>
+            <div class="group-buttons">
+              <button class="section-btn admin-only" onclick="showPage('users')">👤 المستخدمين</button>
+              <button class="section-btn admin-only" onclick="showPage('activity')">📝 سجل النشاطات</button>
+              <button class="section-btn admin-only" onclick="showPage('sessions')">👥 تسجيلات الدخول</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH PAGE -->
+      <div class="page active" id="page-search">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">🔍</div><div class="page-header-text"><h2>البحث عن شهادة</h2><p>استعلام عن شهادات الرفع المساحي والمنسوب</p></div></div>
+        </div>
+        <div class="filter-card">
+          <div class="filter-row">
+            <div class="filter-group"><label>🏢 المركز</label><select id="srchCenter"><option value="">-- اختر المركز --</option><option>العدوة</option><option>مغاغة</option><option>بني مزار</option><option>مطاي</option><option>سمالوط</option><option>المنيا</option><option>أبو قرقاص</option><option>ملوي</option><option>ديرمواس</option></select></div>
+            <div class="filter-group"><label>📄 نوع الشهادة</label><select id="srchType"><option value="survey">🗺️ رفع مساحي</option><option value="leveling">📐 منسوب</option></select></div>
+          </div>
+          <div class="filter-row">
+            <div class="filter-group"><label>🔍 بحث باسم الطالب أو رقم الطلب</label><div class="search-input-wrapper"><input type="text" id="srchInput" placeholder="اكتب الاسم أو رقم الطلب..." autocomplete="off" onkeypress="if(event.key==='Enter')doSearch()"><div id="srchHistory" class="search-history"></div></div></div>
+          </div>
+          <button class="search-btn" id="srchBtn" onclick="doSearch()">🔍 بحث</button>
+        </div>
+        <div class="results-header"><div class="results-count" id="srchCount"></div><button class="refresh-btn" onclick="clearSearchResults()">🗑️ مسح النتائج</button></div>
+        <div id="srchResults" class="results-grid"><div class="no-results">🏢 اختر المركز ونوع الشهادة ثم ابدأ البحث</div></div>
+      </div>
+
+      <!-- SURVEY DELIVERY PAGE -->
+      <div class="page inline-15" id="page-survey">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">🗺️</div><div class="page-header-text"><h2>تسليم شهادات الرفع المساحي</h2><p>إدارة وطباعة كشوف تسليم الشهادات للمراكز</p></div></div>
+          <div class="page-header-stats" id="svStats"><div class="stat-item"><span class="stat-number" id="svStatTotal">0</span><span class="stat-label">إجمالي</span></div><div class="stat-item"><span class="stat-warning" id="svStatDup">0</span><span class="stat-label">مكرر</span></div><div class="stat-item"><span class="stat-number" id="svStatNet">0</span><span class="stat-label">صافي</span></div></div>
+        </div>
+        <div class="info-row-horizontal no-print">
+          <div class="info-h-item"><label>🏢 المركز:</label><select id="svCenter" onchange="svOnCenterChange()"><option value="">-- اختر --</option></select></div>
+          <div class="info-h-item"><label>📅 آخر تسليم:</label><span id="svLastDate">--</span></div>
+          <div class="info-h-item"><label>👤 آخر مستلم:</label><span id="svLastReceiver">--</span></div>
+        </div>
+        <div class="delivery-layout">
+          <div class="delivery-main">
+            <div class="mode-box no-print"><label><input type="radio" name="svMode" value="normal" checked onchange="svChangeMode()"> ✅ مستوفى</label><label><input type="radio" name="svMode" value="not" onchange="svChangeMode()"> ❌ غير مستوفى</label></div>
+            <div class="btns-row no-print">
+              <div class="btns-group"><label class="btn-d inline-37">📂 رفع اكسل<input type="file" id="svExcelFile" accept=".xlsx,.xls" onchange="svImportExcel(event)" class="inline-60"></label><button class="btn-d" onclick="svPrint()">🖨️ طباعة</button><button class="btn-d green" onclick="svSave()">💾 حفظ وترحيل</button></div>
+              <div class="btns-group"><button class="btn-d" onclick="svAddRow()">➕ إضافة صف</button><button class="btn-d red" onclick="svClearAll()">🗑 تفريغ</button></div>
+            </div>
+            <div class="receivers-row-d no-print">
+              <div class="receiver-group-d"><label>👤 المستلم:</label><select id="svReceiverSelect" onchange="svFillReceiver()"><option value="">-- اختر --</option></select><input type="text" id="svNewReceiver" placeholder="اسم جديد" class="inline-138"><button class="btn-rect-d" onclick="svAddReceiver()">+ إضافة</button></div>
+              <div class="receiver-group-d"><label>📅 تاريخ التسليم:</label><input type="date" id="svDeliveryDate"><button class="btn-rect-d" onclick="svFillAllDates()">تعبئة الكل</button></div>
+            </div>
+            <div class="table-wrapper-d"><table class="d-table" id="svTable"><thead></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+        <div id="svSavingOverlay" class="overlay inline-62"><div class="inline-30"><div>⏳ جاري الحفظ...</div><button onclick="svCancelSave()" class="inline-90">إلغاء</button></div></div>
+        <div id="svDupBox" class="inline-65"><h3 class="inline-34">⚠️ طلبات مكررة</h3><div id="svDupList"></div><div class="dup-actions"><button onclick="svDupAction('save_all')" class="inline-3">حفظ الكل</button><button onclick="svDupAction('skip_dup')" class="inline-6">بدون المكرر</button><button onclick="svDupAction('replace_dup')" class="inline-20">استبدال</button><button onclick="svDupAction('cancel')" class="inline-8">إلغاء</button></div></div>
+        <div id="svPrintArea" class="inline-60"></div>
+      </div>
+
+      <!-- LEVELING DELIVERY PAGE -->
+      <div class="page inline-17" id="page-leveling">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">📐</div><div class="page-header-text"><h2>تسليم شهادات المنسوب</h2><p>إدارة وطباعة كشوف تسليم شهادات المنسوب للمراكز</p></div></div>
+          <div class="page-header-stats" id="lvStats"><div class="stat-item"><span class="stat-number" id="lvStatTotal">0</span><span class="stat-label">إجمالي</span></div><div class="stat-item"><span class="stat-warning" id="lvStatDup">0</span><span class="stat-label">مكرر</span></div><div class="stat-item"><span class="stat-number" id="lvStatNet">0</span><span class="stat-label">صافي</span></div></div>
+        </div>
+        <div class="info-row-horizontal no-print">
+          <div class="info-h-item"><label>🏢 المركز:</label><select id="lvCenter" onchange="lvOnCenterChange()"><option value="">-- اختر --</option></select></div>
+          <div class="info-h-item"><label>📅 آخر تسليم:</label><span id="lvLastDate">--</span></div>
+          <div class="info-h-item"><label>👤 آخر مستلم:</label><span id="lvLastReceiver">--</span></div>
+        </div>
+        <div class="delivery-layout">
+          <div class="delivery-main">
+            <div class="mode-box no-print"><label><input type="radio" name="lvMode" value="normal" checked onchange="lvChangeMode()"> ✅ مستوفى</label><label><input type="radio" name="lvMode" value="not" onchange="lvChangeMode()"> ❌ غير مستوفى</label></div>
+            <div class="btns-row no-print">
+              <div class="btns-group"><label class="btn-d inline-38">📂 رفع اكسل<input type="file" id="lvExcelFile" accept=".xlsx,.xls" onchange="lvImportExcel(event)" class="inline-60"></label><button class="btn-d inline-1" onclick="lvPrint()">🖨️ طباعة</button><button class="btn-d inline-5" onclick="lvSave()">💾 حفظ وترحيل</button></div>
+              <div class="btns-group"><button class="btn-d" onclick="lvAddRow()">➕ إضافة صف</button><button class="btn-d red" onclick="lvClearAll()">🗑 تفريغ</button></div>
+            </div>
+            <div class="receivers-row-d no-print">
+              <div class="receiver-group-d"><label>👤 المستلم:</label><select id="lvReceiverSelect" onchange="lvFillReceiver()"><option value="">-- اختر --</option></select><input type="text" id="lvNewReceiver" placeholder="اسم جديد" class="inline-138"><button class="btn-rect-d" onclick="lvAddReceiver()">+ إضافة</button></div>
+              <div class="receiver-group-d"><label>📅 تاريخ التسليم:</label><input type="date" id="lvDeliveryDate"><button class="btn-rect-d" onclick="lvFillAllDates()">تعبئة الكل</button></div>
+            </div>
+            <div class="table-wrapper-d"><table class="d-table" id="lvTable"><thead></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+        <div id="lvSavingOverlay" class="overlay inline-62"><div class="inline-30"><div>⏳ جاري الحفظ...</div><button onclick="lvCancelSave()" class="inline-90">إلغاء</button></div></div>
+        <div id="lvDupBox" class="inline-65"><h3 class="inline-34">⚠️ طلبات مكررة</h3><div id="lvDupList"></div><div class="dup-actions"><button onclick="lvDupAction('save_all')" class="inline-3">حفظ الكل</button><button onclick="lvDupAction('skip_dup')" class="inline-6">بدون المكرر</button><button onclick="lvDupAction('replace_dup')" class="inline-20">استبدال</button><button onclick="lvDupAction('cancel')" class="inline-8">إلغاء</button></div></div>
+        <div id="lvPrintArea" class="inline-60"></div>
+      </div>
+
+      <!-- COLLECTION PAGE -->
+      <div class="page" id="page-collection">
+        <div class="page-header"><div class="page-header-left"><div class="page-header-icon">📥</div><div class="page-header-text"><h2>جمع التقارير</h2><p>تجميع ودمج وتقسيم ملفات التقارير على المراكز</p></div></div></div>
+        <div class="inline-56"><button class="inline-11" onclick="colResetAll()">🗑️ تفريغ جميع البيانات</button></div>
+        <div class="steps-grid" id="colStepsGrid">
+          <div class="step-card" id="colStep1Card"><div class="step-title-s"><span class="step-number-s">1</span> تجميع الطلب العام</div><div class="step-desc-s">رفع مجلد Excel الخاص بالطلب العام</div><button class="step-btn-s" onclick="colSelectGeneral()">📂 رفع المجلد</button><div class="step-stats-s"><div class="step-count-s" id="colStep1Count">0</div><div class="step-label-s">طلب</div></div><button class="step-export-s" id="colStep1Export" onclick="colExportStep(1)" disabled>📥 تصدير</button></div>
+          <div class="step-card" id="colStep2Card"><div class="step-title-s"><span class="step-number-s">2</span> تجميع الخزنة</div><div class="step-desc-s">رفع مجلد Excel الخاص بالخزنة</div><button class="step-btn-s" onclick="colSelectTreasury()">💰 رفع المجلد</button><div class="step-stats-s"><div class="step-count-s" id="colStep2Count">0</div><div class="step-label-s">سجل</div></div><button class="step-export-s" id="colStep2Export" onclick="colExportStep(2)" disabled>📥 تصدير</button></div>
+          <div class="step-card" id="colStep3Card"><div class="step-title-s"><span class="step-number-s">3</span> دمج الطلبات</div><div class="step-desc-s">دمج الطلب العام مع الخزنة</div><button class="step-btn-s" onclick="colMerge()">🔗 تنفيذ الدمج</button><div class="step-stats-s"><div class="step-count-s" id="colStep3Count">0</div><div class="step-label-s">طلب</div></div><button class="step-export-s" id="colStep3Export" onclick="colExportStep(3)" disabled>📥 تصدير</button></div>
+          <div class="step-card" id="colStep4Card"><div class="step-title-s"><span class="step-number-s">4</span> تصفية القديم</div><div class="step-desc-s">رفع ملف بأرقام الطلبات القديمة</div><button class="step-btn-s" onclick="colFilterOld()">🗑️ رفع ملف القديم</button><div class="step-stats-s"><div class="step-count-s" id="colStep4Count">0</div><div class="step-label-s">طلب</div></div><button class="step-export-s" id="colStep4Export" onclick="colExportStep(4)" disabled>📥 تصدير</button></div>
+          <div class="step-card" id="colStep5Card"><div class="step-title-s"><span class="step-number-s">5</span> تقسيم المراكز</div><div class="step-desc-s">تقسيم الطلبات على المراكز</div><button class="step-btn-s" onclick="colShowTypeModal()">📁 تقسيم المراكز</button><div class="step-stats-s"><div class="step-count-s" id="colStep5Count">0</div><div class="step-label-s">طلب</div></div></div>
+        </div>
+        <div class="info-stats-bar"><div class="total-box-c"><div class="number-c" id="colInfoTotal">0</div><div class="label-c">إجمالي</div></div><div class="centers-scroll"><div class="centers-list-c" id="colCentersList"><span class="inline-80">✨ قم بتنفيذ المرحلة 5</span></div></div></div>
+        <div id="colStatus" class="info-msg-c"></div>
+      </div>
+
+      <!-- UPLOAD PAGE -->
+      <div class="page" id="page-upload">
+        <div class="page-header"><div class="page-header-left"><div class="page-header-icon">📤</div><div class="page-header-text"><h2>رفع التقارير</h2><p>تحويل ملفات التقارير إلى السكيمة المطلوبة</p></div></div></div>
+        <div class="upload-section-c">
+          <div class="section-title-c">📤 رفع ملفات التقارير وتصدير السكيمة</div>
+          <div class="steps-grid">
+            <div class="step-card" id="upLevelingCard"><div class="step-title-s"><span class="step-number-s">📐</span> تقرير المنسوب</div><div class="step-desc-s">رفع ملف Excel الخاص بتقرير المنسوب</div><button class="step-btn-s" onclick="upUploadFile('leveling')">📂 رفع الملف</button><div class="step-stats-s"><div class="step-count-s" id="upLevelingCount">0</div><div class="step-label-s">صف</div></div><button class="step-export-s" id="upLevelingExport" onclick="upExportSchema('leveling')" disabled>📎 تصدير السكيمة</button></div>
+            <div class="step-card" id="upSiteCard"><div class="step-title-s"><span class="step-number-s">📍</span> صلاحية موقع</div><div class="step-desc-s">رفع ملف Excel الخاص بصلاحية الموقع</div><button class="step-btn-s" onclick="upUploadFile('site')">📂 رفع الملف</button><div class="step-stats-s"><div class="step-count-s" id="upSiteCount">0</div><div class="step-label-s">صف</div></div><button class="step-export-s" id="upSiteExport" onclick="upExportSchema('site')" disabled>📎 تصدير السكيمة</button></div>
+            <div class="step-card" id="upActivityCard"><div class="step-title-s"><span class="step-number-s">⚡</span> تقرير النشاط</div><div class="step-desc-s">رفع ملف Excel الخاص بتقرير النشاط</div><button class="step-btn-s" onclick="upUploadFile('activity')">📂 رفع الملف</button><div class="step-stats-s"><div class="step-count-s" id="upActivityCount">0</div><div class="step-label-s">صف</div></div><button class="step-export-s" id="upActivityExport" onclick="upExportSchema('activity')" disabled>📎 تصدير السكيمة</button></div>
+          </div>
+          <div id="upStatus" class="info-msg-c"></div>
+        </div>
+      </div>
+
+      <!-- FINISH PAGE -->
+      <div class="page" id="page-finish">
+        <div class="page-header"><div class="page-header-left"><div class="page-header-icon">✅</div><div class="page-header-text"><h2>إنهاء الطلبات</h2><p>استخراج الطلبات المنتهية من سيستم التكنولوجي</p></div></div></div>
+        <div class="inline-56"><button class="inline-11" onclick="finResetAll()">🗑️ تفريغ جميع البيانات</button></div>
+        <div class="steps-grid">
+          <div class="step-card" id="finStep1Card"><div class="step-title-s"><span class="step-number-s">1</span> تجميع الطلب العام</div><div class="step-desc-s">رفع مجلد Excel الخاص بالطلب العام</div><button class="step-btn-s" onclick="finSelectGeneral()">📂 رفع المجلد</button><div class="step-stats-s"><div class="step-count-s" id="finStep1Count">0</div><div class="step-label-s">طلب</div></div><button class="step-export-s" id="finStep1Export" onclick="finExportStep(1)" disabled>📥 تصدير</button></div>
+          <div class="step-card" id="finStep2Card"><div class="step-title-s"><span class="step-number-s">2</span> رفع الطلبات المطبوعة</div><div class="step-desc-s">رفع ملف Excel بأرقام الطلبات المطبوعة</div><button class="step-btn-s" onclick="finSelectPrinted()">🖨️ رفع الملف</button><div class="step-stats-s"><div class="step-count-s" id="finStep2Count">0</div><div class="step-label-s">طلب مطبوع</div></div><button class="step-export-s" id="finStep2Export" onclick="finExportStep(2)" disabled>📥 تصدير</button></div>
+          <div class="step-card" id="finStep3Card"><div class="step-title-s"><span class="step-number-s">3</span> استخراج المنتهية</div><div class="step-desc-s">استخراج الطلبات المنتهية (المطبوعة + قيد الإجراء)</div><button class="step-btn-s" onclick="finExtract()">🔗 تنفيذ الاستخراج</button><div class="step-stats-s"><div class="step-count-s" id="finStep3Count">0</div><div class="step-label-s">طلب منتهي</div></div><button class="step-export-s" id="finStep3Export" onclick="finExportStep(3)" disabled>📥 تصدير</button></div>
+        </div>
+        <div class="results-container-f" id="finResultsContainer"><div class="results-header-f"><div class="results-title-f">📋 الطلبات المنتهية</div><div class="results-actions"><button class="clear-filters-btn" onclick="finClearFilters()">🗑️ مسح الفلاتر</button><button class="export-filter-btn" onclick="finExportFiltered()">📎 تصدير Excel</button></div></div><div class="table-wrapper-f"><div id="finResultsTable"></div></div></div>
+        <div id="finStatus" class="info-msg-c"></div>
+      </div>
+
+      <!-- SESSIONS PAGE -->
+      <div class="page" id="page-sessions">
+        <div class="page-header"><div class="page-header-left"><div class="page-header-icon">👥</div><div class="page-header-text"><h2>تسجيلات الدخول</h2><p>متابعة المستخدمين النشطين وسجل الجلسات</p></div></div></div>
+        <div class="sess-stat-cards">
+          <div class="sess-stat-card active-card"><div class="sess-stat-icon">🟢</div><div class="sess-stat-info"><div class="sess-stat-number" id="sessActiveCount">0</div><div class="sess-stat-label">نشط الآن</div></div></div>
+          <div class="sess-stat-card total-card"><div class="sess-stat-icon">👥</div><div class="sess-stat-info"><div class="sess-stat-number" id="sessTotalCount">0</div><div class="sess-stat-label">إجمالي المستخدمين</div></div></div>
+          <div class="sess-stat-card today-card"><div class="sess-stat-icon">📅</div><div class="sess-stat-info"><div class="sess-stat-number" id="sessTodayCount">0</div><div class="sess-stat-label">دخل اليوم</div></div></div>
+          <div class="sess-stat-card admin-card"><div class="sess-stat-icon">⚙️</div><div class="sess-stat-info"><div class="sess-stat-number" id="sessAdminCount">0</div><div class="sess-stat-label">مشرفون</div></div></div>
+        </div>
+        <div class="sess-filters">
+          <button class="sess-filter-btn active" id="sessFilterAll" onclick="sessApplyFilter('all')">الكل</button>
+          <button class="sess-filter-btn" id="sessFilterActive" onclick="sessApplyFilter('active')">🟢 نشط</button>
+          <button class="sess-filter-btn" id="sessFilterAdmin" onclick="sessApplyFilter('admin')">⚙️ مشرفون</button>
+          <button class="sess-filter-btn" id="sessFilterCenter" onclick="sessApplyFilter('center')">🏢 مراكز</button>
+          <input type="text" class="sess-search" id="sessSearchInput" placeholder="🔍 بحث باسم المستخدم..." oninput="sessApplyFilter()">
+          <button class="sess-refresh-btn" onclick="sessLoad()">🔄 تحديث</button>
+        </div>
+        <div id="sessTableContainer"><div class="sess-empty"><span class="sess-empty-icon">⏳</span>جاري التحميل...</div></div>
+      </div>
+
+      <!-- USERS MANAGEMENT PAGE -->
+      <div class="page" id="page-users">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">👤</div><div class="page-header-text"><h2>إدارة المستخدمين</h2><p>إضافة وتعديل صلاحيات المستخدمين</p></div></div>
+          <button class="btn-d" onclick="openUserModal()">➕ إضافة مستخدم</button>
+        </div>
+        <div class="filter-card">
+          <div class="filter-row">
+            <div class="filter-group"><label>🔍 بحث المستخدمين</label><input type="text" id="userSearchInput" placeholder="اكتب اسم المستخدم أو المركز..." oninput="renderUsers()"></div>
+            <div class="filter-group"><label>🔄 تحديث القائمة</label><button class="search-btn" onclick="loadUsersPage(true)">🔄 تحديث</button></div>
+          </div>
+        </div>
+        <div class="table-wrapper-f"><table class="results-table"><thead><tr><th>اسم المستخدم</th><th>الدور</th><th>المركز</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="5" class="inline-129">⏳ جاري تحميل المستخدمين...</td></tr></tbody></table></div>
+      </div>
+
+      <!-- ACTIVITY LOG PAGE -->
+      <div class="page" id="page-activity">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">📝</div><div class="page-header-text"><h2>سجل النشاطات</h2><p>عرض إجراءات النظام وتعديل المستخدمين</p></div></div>
+          <button class="btn-d" onclick="loadActivityPage(true)">🔄 تحديث السجل</button>
+        </div>
+        <div class="filter-card">
+          <div class="filter-row">
+            <div class="filter-group"><label>🔍 بحث في السجل</label><input type="text" id="activitySearchInput" placeholder="اكتب نصاً للبحث..." oninput="renderActivity()"></div>
+          </div>
+        </div>
+        <div class="table-wrapper-f"><table class="results-table"><thead><tr><th>التاريخ</th><th>الإجراء</th><th>المستخدم</th><th>التفاصيل</th><th>النتيجة</th></tr></thead><tbody id="activityTableBody"><tr><td colspan="5" class="inline-129">⏳ جاري تحميل السجل...</td></tr></tbody></table></div>
+      </div>
+
+      <!-- HAFEZ CENTER PAGE -->
+      <div class="page" id="page-hafez-center">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">💰</div><div class="page-header-text"><h2>كشف توزيع الحافز — <span id="hCenterName"></span></h2><p>وحدة البنية المعلوماتية</p></div></div>
+          <div class="inline-41">
+            <select id="hCenterMonthSel" class="inline-112" onchange="hLoadCenterData()"></select>
+            <button onclick="hLoadCenterData()" class="inline-111">🔄</button>
+          </div>
+        </div>
+        <div id="hNoAllocBanner" class="h-no-alloc-banner inline-60"><h3>⚠️ لم يتم تحديد حافز لشهر <span id="hNaMonth"></span> لمركز <span id="hNaCenter"></span></h3><p class="inline-91">يرجى التواصل مع الإدارة لتحديد المبالغ المخصصة</p></div>
+        <div id="hCenterAllocCards" class="inline-48">
+          <div class="h-alloc-card-new" id="hInfraAllocCard">
+            <div class="alloc-label">مخصص البنية المعلوماتية</div>
+            <div class="alloc-amount inline-32" id="hSInfVal">0 ج.م</div>
+            <div class="alloc-stats">
+              <div class="alloc-stat"><div class="dot inline-4"></div><span class="inline-74">الموزع: <span id="hInfraDistLabel">0</span></span></div>
+              <div class="alloc-stat"><div class="dot inline-16"></div><span class="inline-75">المتبقي: <span id="hInfraRemLabel">0</span></span></div>
+            </div>
+            <div class="h-alloc-progress"><div class="fill inf-bg inline-131" id="hInfraProgressBar"></div></div>
+          </div>
+          <div class="h-alloc-card-new" id="hSuppAllocCard">
+            <div class="alloc-label">مخصص الأجهزة المعاونة</div>
+            <div class="alloc-amount inline-33" id="hSSuppVal">0 ج.م</div>
+            <div class="alloc-stats">
+              <div class="alloc-stat"><div class="dot inline-4"></div><span class="inline-74">الموزع: <span id="hSuppDistLabel">0</span></span></div>
+              <div class="alloc-stat"><div class="dot inline-16"></div><span class="inline-75">المتبقي: <span id="hSuppRemLabel">0</span></span></div>
+            </div>
+            <div class="h-alloc-progress"><div class="fill sup-bg inline-131" id="hSuppProgressBar"></div></div>
+          </div>
+        </div>
+        <div class="h-section-card" id="hInfraSectionCard">
+          <div class="h-section-head ih"><h3>بنية معلوماتية</h3><span id="hInfraBadge"><span class="h-badge h-badge-draft">مسودة</span></span></div>
+          <div class="h-section-body">
+            <div id="hInfraLocked" class="h-locked-notice inline-60">🔒 الكشف مُقفل — تم الإرسال للإدارة</div>
+            <div class="h-action-bar" id="hInfraActionBar">
+              <button class="h-btn inline-13" id="hInfraSaveBtn" onclick="hSaveDraft('infra')">💾 حفظ</button>
+              <button class="h-btn inline-6" id="hInfraSendBtn" onclick="hSendSheet('infra')">📤 إرسال</button>
+              <button class="h-btn inline-14" id="hInfraClearBtn" onclick="hClearTable('infra')">🗑️ تفريغ</button>
+              <button class="h-btn print" id="hInfraPrintBtn" onclick="hPrintSheet('infra')" disabled>🖨️ طباعة</button>
+            </div>
+            <div class="inline-55" id="hInfraAddRow">
+              <select id="hInfraEmpSel" class="inline-66" onchange="hAddEmpToTable('infra')"><option value="">-- اختر موظف للإضافة --</option></select>
+            </div>
+            <div class="inline-101"><table class="h-main-table"><thead><tr><th>#</th><th>الاسم</th><th>الرقم القومي</th><th>الوظيفة</th><th>المبلغ (ج.م)</th><th></th></tr></thead><tbody id="hInfraTbody"></tbody></table></div>
+            <div class="h-sec-footer"><div class="inline-76"><span>الموزع: </span><strong id="hInfraDist" class="inline-36">0</strong> | <span>المتبقي: </span><strong id="hInfraRem" class="inline-35">0</strong></div></div>
+<div class="h-approved-bar" id="hInfraApprBar"><span>✅ معتمد من الإدارة</span><button class="h-btn print" onclick="hPrintSheet('infra')">🖨️ طباعة</button><button class="h-btn inline-9" onclick="hOpenAttachments(hInfraId,'بنية معلوماتية',true)">📎 المرفقات</button></div>
+            <div class="h-returned-bar" id="hInfraRetBar"><span>↩️ أُعيد للمراجعة: </span><span id="hInfraRetNotes" class="inline-73"></span></div>
+          </div>
+        </div>
+        <div class="h-section-card" id="hSuppSectionCard">
+          <div class="h-section-head sh"><h3>أجهزة معاونة</h3><span id="hSuppBadge"><span class="h-badge h-badge-draft">مسودة</span></span></div>
+          <div class="h-section-body">
+            <div id="hSuppLocked" class="h-locked-notice inline-60">🔒 الكشف مُقفل — تم الإرسال للإدارة</div>
+            <div class="h-action-bar" id="hSuppActionBar">
+              <button class="h-btn inline-13" id="hSuppSaveBtn" onclick="hSaveDraft('support')">💾 حفظ</button>
+              <button class="h-btn inline-6" id="hSuppSendBtn" onclick="hSendSheet('support')">📤 إرسال</button>
+              <button class="h-btn inline-14" id="hSuppClearBtn" onclick="hClearTable('support')">🗑️ تفريغ</button>
+              <button class="h-btn print" id="hSuppPrintBtn" onclick="hPrintSheet('support')" disabled>🖨️ طباعة</button>
+            </div>
+            <div class="inline-55" id="hSuppAddRow">
+              <select id="hSuppEmpSel" class="inline-66" onchange="hAddEmpToTable('support')"><option value="">-- اختر موظف للإضافة --</option></select>
+            </div>
+            <div class="inline-101"><table class="h-main-table"><thead><tr><th>#</th><th>الاسم</th><th>الرقم القومي</th><th>الوظيفة</th><th>المبلغ (ج.م)</th><th></th></tr></thead><tbody id="hSuppTbody"></tbody></table></div>
+            <div class="h-sec-footer"><div class="inline-76"><span>الموزع: </span><strong id="hSuppDist" class="inline-36">0</strong> | <span>المتبقي: </span><strong id="hSuppRem" class="inline-35">0</strong></div></div>
+<div class="h-approved-bar" id="hSuppApprBar"><span>✅ معتمد من الإدارة</span><button class="h-btn print" onclick="hPrintSheet('support')">🖨️ طباعة</button><button class="h-btn inline-9" onclick="hOpenAttachments(hSuppId,'أجهزة معاونة',true)">📎 المرفقات</button></div>
+            <div class="h-returned-bar" id="hSuppRetBar"><span>↩️ أُعيد للمراجعة: </span><span id="hSuppRetNotes" class="inline-73"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HAFEZ ADMIN PAGE — تعديل 5: هيدر ثابت -->
+      <div class="page" id="page-hafez-admin">
+        <!-- هيدر ثابت: اختيار الشهر + أزرار الإدارة -->
+        <div class="h-admin-sticky-header">
+          <div class="inline-43">
+            <div class="inline-39">
+              <span class="inline-86">⚙️</span>
+              <div>
+                <div class="inline-85">إدارة منظومة الحافز</div>
+                <div class="inline-70">إدارة المخصصات واعتماد الكشوف</div>
+              </div>
+            </div>
+            <div class="inline-42">
+              <select id="hAdminMonthSel" class="inline-113" onchange="hLoadAdminData()"></select>
+              <button onclick="hLoadAdminData()" class="inline-111">🔄</button>
+              <button onclick="hExportConsolidatedExcel()" class="inline-110">📊 تصدير مجمع</button>
+              <!-- تعديل 3: زر طباعة مجمعة -->
+<button onclick="openPrintModal()" class="inline-109">🖨️ طباعة مجمعة</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="h-stats-bar">
+          <div class="h-sb-item"><div class="h-sb-val" id="hStatTotalAlloc">0</div><div class="h-sb-lbl">💰 إجمالي المخصصات</div></div>
+          <div class="h-sb-div"></div>
+          <div class="h-sb-item"><div class="h-sb-val" id="hStatTotalSheets">0</div><div class="h-sb-lbl">📋 إجمالي الكشوف</div></div>
+          <div class="h-sb-div"></div>
+          <div class="h-sb-item"><div class="h-sb-val" id="hStatApproved">0</div><div class="h-sb-lbl">✅ معتمد</div></div>
+          <div class="h-sb-div"></div>
+          <div class="h-sb-item"><div class="h-sb-val" id="hStatPending">0</div><div class="h-sb-lbl">⏳ انتظار</div></div>
+        </div>
+
+        <!-- تعديل 4: لف جدول المخصصات بـ wrapper للتمرير الأفقي -->
+        <div class="h-alloc-panel">
+          <div class="h-alloc-head">
+            <h3>💰 إدارة المخصصات — <span id="hAllocMonthTitle"></span></h3>
+            <div class="inline-51">
+              <span id="hAllocBadge" class="h-badge h-badge-draft">قيد التعديل</span>
+              <button class="h-btn inline-13" id="hAllocEditBtn" onclick="hEnableAllocEditing(true)">✏️ تعديل</button>
+              <button class="h-btn inline-29" id="hAllocSaveBtn" onclick="hSaveAllAllocations()" disabled>💾 حفظ</button>
+              <button class="h-btn inline-10" id="hAllocSendBtn" onclick="hSendAllocToCenters()" disabled>📡 إرسال</button>
+            </div>
+          </div>
+          <div class="inline-105">
+            <div class="inline-18">💡 أدخل الإجمالي — يُقسَّم تلقائياً (٢/٣ بنية + ١/٣ أجهزة).</div>
+            <!-- تعديل 4: wrapper للتمرير الأفقي على الموبايل -->
+            <div class="h-alloc-matrix-wrapper">
+              <table class="h-alloc-matrix"><thead id="hAllocHead"></thead><tbody id="hAllocBody"></tbody></table>
+            </div>
+            <div class="inline-71" id="hLastSaved"></div>
+          </div>
+        </div>
+
+        <div class="card inline-102">
+          <div class="card-header">
+            <h3>📊 كشوف المراكز الواردة</h3>
+            <div class="inline-52">
+              <button class="h-btn approve" onclick="hApproveAllSent()">✅ قبول الكل</button>
+              <button class="h-btn ret" onclick="hReturnAllSent()">↩️ إرجاع الكل</button>
+              <button class="h-btn inline-27" onclick="hLoadAdminData()">🔄</button>
+            </div>
+          </div>
+          <div class="inline-53">
+            <span class="inline-88">دلالة الألوان:</span>
+            <span class="inline-22">⬜ لم يُرسل</span>
+            <span class="inline-25">🟡 كشف واحد</span>
+            <span class="inline-19">🟢 الاثنان</span>
+            <span class="inline-12">✅ معتمدان</span>
+          </div>
+          <div class="inline-97"><table class="h-centers-table" id="hCentersTable"><thead><tr><th class="inline-130">🏢 المركز</th><th class="inline-94">بنية معلوماتية</th><th class="inline-94">أجهزة معاونة</th></tr></thead><tbody id="hCentersTableBody"><tr><td colspan="3" class="inline-128"><div class="h-loading"><span class="h-dot"></span><span class="h-dot"></span><span class="h-dot"></span>جاري التحميل...</div></td></tr></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- HAFEZ HISTORY PAGE -->
+      <div class="page" id="page-hafez-history">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">📅</div><div class="page-header-text"><h2>السجل التاريخي للحافز</h2><p>اضغط على السنة لطي/فرد الأشهر</p></div></div>
+          <div class="inline-52">
+            <button onclick="hRefreshHistory()" class="inline-118">🔄 تحديث</button>
+            <button onclick="hExpandAllYears()" class="inline-117">📂 فتح الكل</button>
+            <button onclick="hCollapseAllYears()" class="inline-119">📁 طي الكل</button>
+            <button onclick="hExportHistoryExcel()" class="inline-115">📊 Excel</button>
+          </div>
+        </div>
+        <div class="inline-45">
+          <span class="inline-82">📅 تصفية حسب العام:</span>
+          <div id="hHistYearFilters" class="inline-52"></div>
+          <span id="hHistCount" class="inline-78"></span>
+        </div>
+        <div class="inline-126">
+          <div class="inline-98">
+            <table id="hHistTable" class="inline-95">
+              <thead id="hHistHead" class="inline-127"></thead>
+              <tbody id="hHistBody"><tr><td colspan="20" class="inline-129"><div class="h-loading"><span class="h-dot"></span><span class="h-dot"></span><span class="h-dot"></span>جاري التحميل...</div></td></tr></tbody>
+              <tfoot id="hHistFoot"></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- HAFEZ EMPLOYEES PAGE -->
+      <div class="page" id="page-hafez-employees">
+        <div class="page-header">
+          <div class="page-header-left"><div class="page-header-icon">👥</div><div class="page-header-text"><h2>إدارة موظفي الحافز</h2><p>قاعدة بيانات الموظفين</p></div></div>
+          <div class="inline-50">
+            <button onclick="hExportEmpsExcel()" class="inline-114">📊 Excel</button>
+            <button onclick="hOpenAddEmpModal('')" class="inline-116">➕ إضافة</button>
+          </div>
+        </div>
+        <div class="inline-46">
+          <div class="inline-69"><input type="text" id="hEmpSearchInput" placeholder="🔍 اكتب الاسم أو الرقم القومي للبحث..." class="inline-132" oninput="hLiveSearchEmployees()" onkeydown="if(event.key==='Enter')hRenderFilteredEmployees()"></div>
+          <select id="hEmpFilterCenter" onchange="hRenderFilteredEmployees()" class="inline-67"><option value="">كل المراكز</option></select>
+          <select id="hEmpFilterStatus" onchange="hRenderFilteredEmployees()" class="inline-67"><option value="">كل الحالات</option><option value="نشط">🟢 نشط</option><option value="غير نشط">🔴 غير نشط</option></select>
+          <select id="hEmpFilterType" onchange="hRenderFilteredEmployees()" class="inline-67"><option value="">كل الأنواع</option><option value="بنية معلوماتية">بنية معلوماتية</option><option value="أجهزة معاونة">أجهزة معاونة</option><option value="قسم آخر">📁 قسم آخر</option></select>
+          <button onclick="hResetEmployeeFilters()" class="inline-120">🗑️ مسح</button>
+        </div>
+        <div class="inline-57"><span id="hEmpResultsCount" class="inline-77"></span></div>
+        <div class="inline-100">
+          <table class="h-emp-table"><thead><tr><th>#</th><th>الاسم</th><th>الرقم القومي</th><th>الوظيفة</th><th>المركز</th><th>النوع</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="hEmpTbody"><tr><td colspan="8" class="inline-128">جاري التحميل...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- HAFEZ SEARCH PAGE -->
+      <div class="page" id="page-hafez-search">
+        <div class="page-header"><div class="page-header-left"><div class="page-header-icon">🔍</div><div class="page-header-text"><h2>بحث في سجلات الحافز</h2><p>البحث عن موظف بالاسم أو الرقم القومي</p></div></div></div>
+        <div class="card">
+          <div class="inline-47">
+            <input type="text" id="hSearchName" placeholder="🔍 البحث بالاسم" class="inline-68" onkeydown="if(event.key==='Enter')hDoSearch()">
+            <input type="text" id="hSearchNid" placeholder="الرقم القومي" maxlength="14" class="inline-68" onkeydown="if(event.key==='Enter')hDoSearch()">
+            <button onclick="hDoSearch()" class="inline-104">🔍 بحث</button>
+          </div>
+          <div id="hSearchLoading" class="inline-61"><div class="h-loading"><span class="h-dot"></span><span class="h-dot"></span><span class="h-dot"></span>جاري البحث...</div></div>
+          <div id="hSearchResults" class="inline-60">
+            <div class="inline-54">
+              <button onclick="hPrintSearchResults()" class="inline-107">🖨️ طباعة</button>
+              <button onclick="hExportSearchResults()" class="inline-108">📊 Excel</button>
+            </div>
+            <div class="inline-99"><table class="h-emp-table"><thead id="hSearchHead"></thead><tbody id="hSearchBody"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end content-area -->
+
+    <!-- شريط التنقل السفلي للموبايل -->
+    <div class="mob-bottom-nav inline-60" id="mobBottomNav">
+      <button class="mob-nav-btn active" data-page="search" onclick="mobGoPage('search')"><span class="mob-nav-icon">🔍</span><span>بحث شهادة</span></button>
+      <button class="mob-nav-btn center-only" data-page="hafez-center" onclick="mobGoPage('hafez-center')"><span class="mob-nav-icon">💰</span><span>كشف الحافز</span></button>
+      <button class="mob-nav-btn admin-only" data-page="survey" onclick="mobGoPage('survey')"><span class="mob-nav-icon">🗺️</span><span>الرفع المساحي</span></button>
+      <button class="mob-nav-btn" data-page="mobile-home" onclick="mobGoPage('mobile-home')"><span class="mob-nav-icon">🏠</span><span>القائمة</span></button>
+      <button class="mob-nav-btn admin-only" data-page="hafez-admin" onclick="mobGoPage('hafez-admin')"><span class="mob-nav-icon">⚙️</span><span>إدارة الحافز</span></button>
+      <button class="mob-nav-btn" onclick="mobOpenMore()"><span class="mob-nav-icon">☰</span><span>المزيد</span></button>
+    </div>
+    <div class="mob-sheet-overlay" id="mobSheetOverlay" onclick="mobCloseMore()"></div>
+    <div class="mob-more-sheet" id="mobMoreSheet">
+      <div class="mob-sheet-handle"></div>
+      <div class="mob-sheet-title">📋 جميع الأقسام</div>
+      <div class="mob-sheet-grid">
+        <div class="mob-sheet-item" onclick="mobGoPage('search')"><span class="msi-icon">🔍</span><span class="msi-label">بحث شهادة</span></div>
+        <div class="mob-sheet-item admin-office-only" onclick="mobGoPage('survey')"><span class="msi-icon">🗺️</span><span class="msi-label">تسليم رفع مساحي</span></div>
+        <div class="mob-sheet-item admin-office-only" onclick="mobGoPage('leveling')"><span class="msi-icon">📐</span><span class="msi-label">تسليم منسوب</span></div>
+        <div class="mob-sheet-item admin-office-only" onclick="mobGoPage('collection')"><span class="msi-icon">📥</span><span class="msi-label">جمع التقارير</span></div>
+        <div class="mob-sheet-item admin-office-only" onclick="mobGoPage('upload')"><span class="msi-icon">📤</span><span class="msi-label">رفع التقارير</span></div>
+        <div class="mob-sheet-item admin-office-only" onclick="mobGoPage('finish')"><span class="msi-icon">✅</span><span class="msi-label">إنهاء الطلبات</span></div>
+        <div class="mob-sheet-item admin-only" onclick="mobGoPage('sessions')"><span class="msi-icon">👥</span><span class="msi-label">تسجيلات الدخول</span></div>
+        <div class="mob-sheet-item center-only" onclick="mobGoPage('hafez-center')"><span class="msi-icon">💰</span><span class="msi-label">كشف الحافز</span></div>
+        <div class="mob-sheet-item admin-only" onclick="mobGoPage('hafez-admin')"><span class="msi-icon">⚙️</span><span class="msi-label">إدارة الحافز</span></div>
+        <div class="mob-sheet-item admin-only" onclick="mobGoPage('hafez-history')"><span class="msi-icon">📅</span><span class="msi-label">السجل التاريخي</span></div>
+        <div class="mob-sheet-item admin-only" onclick="mobGoPage('hafez-employees')"><span class="msi-icon">👥</span><span class="msi-label">موظفو الحافز</span></div>
+        <div class="mob-sheet-item admin-only" onclick="mobGoPage('users')"><span class="msi-icon">👤</span><span class="msi-label">المستخدمين</span></div>
+        <div class="mob-sheet-item admin-only" onclick="mobGoPage('activity')"><span class="msi-icon">📝</span><span class="msi-label">سجل النشاطات</span></div>
+        <div class="mob-sheet-item" onclick="mobGoPage('hafez-search')"><span class="msi-icon">🔍</span><span class="msi-label">بحث الحافز</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="h-modal-overlay inline-63" id="hAttachModal">
+  <div class="h-modal h-modal-lg inline-23">
+    <div class="h-modal-header inline-26">
+      <h3 class="inline-83">📎 مرفقات الكشف <span id="hAttSubTitle" class="inline-96"></span></h3>
+      <button class="h-modal-close inline-28" onclick="hCloseAttachments()">✕</button>
+    </div>
+    <div class="h-modal-body inline-106">
+      <div id="hAttachUploadBox" class="inline-31">
+        <input type="file" id="hAttachFileInput" class="inline-60" onchange="hHandleAttachFile()" multiple>
+        <button class="h-btn inline-2" onclick="document.getElementById('hAttachFileInput').click()">📤 اختر ملف للرفع</button>
+        <div class="inline-72">يمكن اختيار أكثر من ملف. الحد الأقصى 10 ميجا للملف.</div>
+        <div id="hAttachUploadStatus" class="inline-92"></div>
+      </div>
+      <div id="hAttachList" class="inline-44"></div>
+    </div>
+    <div class="h-modal-footer inline-103">
+      <button class="h-btn inline-7" onclick="hCloseAttachments()">إغلاق</button>
+    </div>
+  </div>
+</div>
+<div id="colReportTypeModal" class="modal-overlay">
+  <div class="modal-box"><div class="inline-87">📊</div><h3>اختر نوع التقرير</h3><p>تقسيم الطلبات حسب المركز</p><div class="modal-btns"><button class="modal-btn survey" onclick="colSplitByCenter('survey')">📐 رفع مساحي</button><button class="modal-btn leveling" onclick="colSplitByCenter('leveling')">⚖️ منسوب</button><button class="modal-btn cancel" onclick="document.getElementById('colReportTypeModal').classList.remove('show')">✕ إلغاء</button></div></div>
+</div>
+
+<div class="h-modal-overlay" id="hSheetViewModal">
+  <div class="h-modal h-modal-lg"><div class="h-modal-header"><h3 id="hSvTitle">عرض الكشف</h3><button class="h-modal-close" onclick="hCloseModal('hSheetViewModal')">✕</button></div><div class="h-modal-body" id="hSvBody"></div><div class="h-modal-footer" id="hSvActions"></div></div>
+</div>
+
+<!-- Modal إضافة/تعديل مستخدم -->
+<div class="h-modal-overlay" id="userModal">
+  <div class="h-modal inline-93">
+    <div class="h-modal-header"><h3 id="userModalTitle">➕ إضافة مستخدم</h3><button class="h-modal-close" onclick="closeUserModal()">✕</button></div>
+    <div class="h-modal-body">
+      <div class="inline-58">
+        <input id="userUsername" placeholder="اسم المستخدم *" class="inline-135">
+        <input id="userPassword" placeholder="كلمة المرور" type="password" class="inline-136">
+        <select id="userRole" class="inline-135"><option value="admin">admin</option><option value="office">office</option><option value="center">center</option></select>
+        <input id="userCenter" placeholder="المركز (اختياري)" class="inline-135">
+        <select id="userStatus" class="inline-135"><option value="نشط">نشط</option><option value="غير نشط">غير نشط</option></select>
+      </div>
+      <input type="hidden" id="editUserKey">
+    </div>
+    <div class="h-modal-footer">
+      <button onclick="closeUserModal()" class="inline-122">إلغاء</button>
+      <button onclick="saveUser()" class="inline-123">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal إضافة/تعديل موظف -->
+<div class="h-modal-overlay" id="hAddEmpModal">
+  <div class="h-modal inline-93">
+    <div class="h-modal-header"><h3 id="hAddEmpTitle">➕ إضافة موظف</h3><button class="h-modal-close" onclick="hCloseModal('hAddEmpModal')">✕</button></div>
+    <div class="h-modal-body">
+      <div class="inline-58">
+        <input id="hEmpName" placeholder="الاسم الكامل *" class="inline-135">
+        <input id="hEmpNid" placeholder="الرقم القومي (14 رقم) *" maxlength="14" class="inline-136">
+        <input id="hEmpJob" placeholder="الوظيفة *" class="inline-135">
+        <select id="hEmpCenter" class="inline-135"><option value="">-- اختر المركز --</option></select>
+        <select id="hEmpType" class="inline-135"><option value="بنية معلوماتية">بنية معلوماتية</option><option value="أجهزة معاونة">أجهزة معاونة</option><option value="قسم آخر">📁 قسم آخر</option></select>
+        <div class="inline-21">
+          <label class="inline-81">حالة الموظف:</label>
+          <div class="inline-49">
+            <label class="inline-40"><input type="radio" name="hEmpStatus" value="active" checked> نشط</label>
+            <label class="inline-40"><input type="radio" name="hEmpStatus" value="inactive"> غير نشط</label>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="hEditEmpId">
+    </div>
+    <div class="h-modal-footer">
+      <button onclick="hCloseModal('hAddEmpModal')" class="inline-122">إلغاء</button>
+      <button onclick="hSubmitAddEmp()" class="inline-123">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal نقل موظف -->
+<div class="h-modal-overlay" id="hTransferModal">
+  <div class="h-modal inline-93">
+    <div class="h-modal-header"><h3>🔄 نقل موظف</h3><button class="h-modal-close" onclick="hCloseModal('hTransferModal')">✕</button></div>
+    <div class="h-modal-body">
+      <div class="inline-59">
+        <div><label class="inline-89">👤 الموظف:</label><input type="text" id="hTransferEmpName" readonly class="inline-133"></div>
+        <div><label class="inline-89">🏢 المركز الحالي:</label><input type="text" id="hTransferOldCenter" readonly class="inline-133"></div>
+        <div><label class="inline-89">🏢 المركز الجديد:</label><select id="hTransferNewCenter" class="inline-134"></select></div>
+        <div><label class="inline-89">📂 النوع الجديد:</label><select id="hTransferNewType" class="inline-134"></select></div>
+        <div><label class="inline-89">🟢 الحالة الجديدة:</label><select id="hTransferNewStatus" class="inline-134"></select></div>
+      </div>
+      <input type="hidden" id="hTransferNationalId">
+    </div>
+    <div class="h-modal-footer">
+      <button onclick="hCloseModal('hTransferModal')" class="inline-121">إلغاء</button>
+      <button onclick="hConfirmTransfer()" class="inline-124">✅ تأكيد النقل</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Panel -->
+<div class="h-notif-panel" id="hNotifPanel">
+  <div class="h-notif-panel-head"><h4>🔔 الإشعارات</h4><button onclick="hClearNotifs()">🗑️ مسح الكل</button></div>
+  <div class="h-notif-panel-body" id="hNotifPanelBody"><div class="h-notif-empty">📭 لا توجد إشعارات</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+</body></html>
